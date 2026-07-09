@@ -67,6 +67,7 @@
     @page{margin:8mm;}
   }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -96,6 +97,7 @@
           <button class="btn sm ghost" id="btnStatus" onclick="toggleStatus()">전환</button></div>
         <div class="row" style="gap:8px">
           <button class="btn sm green" onclick="printTimetables()">🖨️ 학생 시간표 출력(PDF)</button>
+          <button class="btn sm green" onclick="exportStudentsXlsx()">📋 전체 학생 명단(Excel)</button>
           <button class="btn sm ghost" onclick="clearCache()">🔄 데이터 새로고침</button>
           <button class="btn sm ghost" onclick="exportAll()">⬇ 전체 CSV</button>
         </div>
@@ -224,6 +226,43 @@ function exportOne(pid){ var f=findCourse(pid); if(!f)return;
   var rows=[['시간대','강좌','요일','순번','학번','이름','구분','우선권','선정예상','신청시각'].join(',')];
   f.c.신청자.forEach(function(s){ rows.push([f.b.블록명,f.c.프로그램명,f.c.요일,s.순번,s.학번,s.이름,s.기숙사여부,(s.우선권?'우선권':''),(s.선정?'선정':'대기'),s.시각].map(csvCell).join(',')); });
   download('방과후_'+f.c.프로그램명+'.csv',rows.join('\n')); }
+function exportStudentsXlsx(){
+  if(!DATA){ return; }
+  if(typeof XLSX==='undefined'){ alert('엑셀 라이브러리를 불러오지 못했습니다. 인터넷 연결 확인 후 다시 시도하세요.'); return; }
+  var reqSet={}; (DATA.reqSlots||[]).forEach(function(s){reqSet[s]=1;});
+  var slots=DATA.slots||[], days=DATA.days||[];
+  var byId={}; (DATA.students||[]).forEach(function(s){
+    var grid={}; (s.cells||[]).forEach(function(c){ (c.요일||[]).forEach(function(d){ grid[c.시간대+'|'+d]=c.프로그램명; }); });
+    byId[s.학번]={기숙사여부:s.기숙사여부, grid:grid, count:(s.cells||[]).length};
+  });
+  var header=['학번','이름','학년','반','기숙사여부','신청여부'];
+  slots.forEach(function(sl){ var nm=slotShort(sl).name;
+    if(reqSet[sl]) header.push(nm);
+    else days.forEach(function(d){ header.push(nm+'('+d+')'); });
+  });
+  header.push('신청 프로그램 수');
+  var aoa=[header];
+  (DATA.roster||[]).forEach(function(st){
+    var a=byId[st.학번], applied=!!a;
+    var row=[st.학번, st.이름, st.학년, st.반, applied?a.기숙사여부:'', applied?'O':'X'];
+    slots.forEach(function(sl){
+      if(reqSet[sl]){
+        var names={}; if(applied){ Object.keys(a.grid).forEach(function(k){ if(k.split('|')[0]===sl) names[a.grid[k]]=1; }); }
+        row.push(Object.keys(names).join(', '));
+      } else {
+        days.forEach(function(d){ var v=applied?(a.grid[sl+'|'+d]||''):'';
+          if(!v && applied && a.기숙사여부==='기숙사') v='기숙사';
+          row.push(v); });
+      }
+    });
+    row.push(applied?a.count:0);
+    aoa.push(row);
+  });
+  var ws=XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols']=header.map(function(h,i){ return {wch: i<2?10:(i<6?8:14)}; });
+  var wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, '전체학생신청현황');
+  XLSX.writeFile(wb, '방과후_전체학생_신청현황.xlsx');
+}
 function exportAll(){ var rows=[['시간대','강좌','요일','순번','학번','이름','구분','우선권','선정예상','신청시각'].join(',')];
   DATA.blocks.forEach(function(b){ b.courses.forEach(function(c){ c.신청자.forEach(function(s){
     rows.push([b.블록명,c.프로그램명,c.요일,s.순번,s.학번,s.이름,s.기숙사여부,(s.우선권?'우선권':''),(s.선정?'선정':'대기'),s.시각].map(csvCell).join(',')); }); }); });
