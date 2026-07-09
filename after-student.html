@@ -277,14 +277,20 @@ function fmtWhen(ms){var d=new Date(ms),wk=['일','월','화','수','목','금',
 function renderBefore(info){var g=document.getElementById('gate');g.classList.remove('hidden');
   g.innerHTML='<div class="gate"><div class="big">⏳</div><h2>아직 신청 시작 전이에요</h2>'+
     (info.start?'<div class="when">🗓️ 시작: '+fmtWhen(info.start)+'</div>':'')+'<div class="cd" id="cd"></div>'+
-    '<p>시간이 되면 이 화면이 <b>자동으로</b> 신청 화면으로 바뀌어요.<br>페이지를 닫지 말고 기다려 주세요.</p>'+
+    '<p>시간이 되면 아래에 <b>신청 버튼</b>이 나타나요.<br>페이지를 닫지 말고 기다려 주세요.</p>'+
     '<button class="btn ghost" onclick="boot()">새로고침</button></div>';
   tickCountdown(info.start);if(cdTimer)clearInterval(cdTimer);cdTimer=setInterval(function(){tickCountdown(info.start);},1000);}
 function tickCountdown(startMs){var diff=startMs-(Date.now()+SRV_OFFSET);
-  if(diff<=0){clearInterval(cdTimer);cdTimer=null;call('getWindowInfo',{},applyState,openApp);return;}
+  if(diff<=0){clearInterval(cdTimer);cdTimer=null;showStartButton();return;}
   var s=Math.floor(diff/1000),dd=Math.floor(s/86400);s-=dd*86400;var hh=Math.floor(s/3600);s-=hh*3600;var mm=Math.floor(s/60),ss=s-mm*60;
   function z(n){return(n<10?'0':'')+n;}var units=[];if(dd>0)units.push(['일',dd]);units.push(['시',z(hh)],['분',z(mm)],['초',z(ss)]);
   var cd=document.getElementById('cd');if(!cd)return;cd.innerHTML=units.map(function(u){return '<div class="u"><b>'+u[1]+'</b><span>'+u[0]+'</span></div>';}).join('');}
+function showStartButton(){
+  var g=document.getElementById('gate');g.classList.remove('hidden');
+  g.innerHTML='<div class="gate"><div class="big">🎉</div><h2>신청이 시작되었어요!</h2>'+
+    '<p>준비되면 아래 버튼을 눌러 신청을 시작하세요.</p>'+
+    '<button class="btn" onclick="openApp()">신청 시작하기 &rarr;</button></div>';
+}
 function renderClosed(info){var g=document.getElementById('gate');g.classList.remove('hidden');
   var msg=(info.state==='closed_admin')?'신청이 마감되었습니다.':(info.end?'신청이 마감되었습니다. (마감: '+fmtWhen(info.end)+')':'신청이 마감되었습니다.');
   g.innerHTML='<div class="gate closed"><div class="big">🔒</div><h2>신청 기간이 아닙니다</h2><p>'+msg+'<br>문의는 담당 선생님께 해주세요.</p>'+
