@@ -35,6 +35,7 @@
   .tt td.slot .tm{display:block;font-weight:500;font-size:8.5px;color:#6b7891;margin-top:1px;white-space:nowrap;}
   .tt td.cell{height:38px;color:var(--gray);}
   .tt td.cell.full{background:var(--okbg);color:var(--ok);font-weight:800;font-size:11px;}
+  .tt td.cell.dorm{background:#eef1f7;color:#5b6b86;font-weight:700;font-size:10.5px;}
   .tt td.cell .pl{display:block;font-weight:500;color:#5c7; font-size:9.5px;}
   .blk{margin-top:14px;background:#f5f8fc;border:1px solid #e2e9f3;border-radius:14px;padding:11px 11px 13px;}
   .blk .bt{font-weight:800;color:var(--navy);font-size:15px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 2px;padding-left:9px;border-left:4px solid var(--blue);line-height:1.15;}
@@ -133,7 +134,7 @@ function call(action, params, onOk, onErr){
     .catch(function(e){ (onErr||function(){})(e); });
 }
 var S={학번:'',이름:'',기숙사여부:''};
-var BLOCKS=[],ITEM={},SELECTED={},SLOTS=[],DAYS=[];
+var BLOCKS=[],ITEM={},SELECTED={},SLOTS=[],DAYS=[],REQ_SLOTS={};
 
 function setStep(n){[1,2,3,4].forEach(function(i){
   document.getElementById('step'+i).classList.toggle('hidden',i!==n);
@@ -180,6 +181,7 @@ function renderStructure(r){
   document.getElementById('load3').style.display='none';
   if(!r.ok){showMsg('msg3',r.msg);return;}
   BLOCKS=r.blocks;SLOTS=r.slots;DAYS=r.days;ITEM={};
+  REQ_SLOTS={};BLOCKS.forEach(function(b){ if(b.기숙사필수&&b.시간대) REQ_SLOTS[b.시간대]=1; });
   BLOCKS.forEach(function(b){b.items.forEach(function(it){it.블록ID=b.블록ID;it.블록명=b.블록명;ITEM[it.프로그램ID]=it;});});
   var box=document.getElementById('blocks');box.innerHTML='';
   BLOCKS.forEach(function(b){
@@ -231,6 +233,7 @@ function renderTT(u){
   var body=SLOTS.map(function(slot){
     var tds=DAYS.map(function(d){ var it=u[slot+'|'+d];
       if(it) return '<td class="cell full">'+it.프로그램명+(it.장소?'<span class="pl">'+it.장소+'</span>':'')+'</td>';
+      if(S.기숙사여부==='기숙사' && !REQ_SLOTS[slot]) return '<td class="cell dorm">🏠 기숙사</td>';
       return '<td class="cell">·</td>'; }).join('');
     var sp=slot.split(' '); var nm=sp[0], tm=sp.slice(1).join(' ').replace(/[()]/g,'');
     return '<tr><td class="slot">'+nm+(tm?'<span class="tm">'+tm+'</span>':'')+'</td>'+tds+'</tr>';
