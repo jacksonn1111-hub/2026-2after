@@ -96,6 +96,7 @@
           <button class="btn sm ghost" id="btnStatus" onclick="toggleStatus()">전환</button></div>
         <div class="row" style="gap:8px">
           <button class="btn sm green" onclick="printTimetables()">🖨️ 학생 시간표 출력(PDF)</button>
+          <button class="btn sm ghost" onclick="clearCache()">🔄 데이터 새로고침</button>
           <button class="btn sm ghost" onclick="exportAll()">⬇ 전체 CSV</button>
         </div>
       </div>
@@ -183,6 +184,7 @@ function renderTable(list){
   return '<table class="rt"><thead><tr><th>순번</th><th>학번</th><th>이름</th><th>구분</th><th>우선권</th><th>선정예상</th><th>신청시각</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>';
 }
 function toggleBody(i){ document.getElementById('body'+i).classList.toggle('open'); }
+function clearCache(){ call('clearServerCache',{pin:PIN},function(r){ alert((r&&r.ok)?'데이터 캐시를 초기화했어요. (시트 수정 즉시 반영)':'실패했습니다.'); }); }
 function toggleStatus(){ call('setSystemStatus',{pin:PIN,open:DATA.상태!=='열림'},function(){load();}); }
 function saveSchedule(){ var s=document.getElementById('schStart').value,e=document.getElementById('schEnd').value,m=document.getElementById('schMsg');m.textContent='저장 중…';
   call('setSchedule',{pin:PIN,startStr:s,endStr:e},function(res){ if(!res.ok){m.textContent='⚠️ '+res.msg;return;} m.textContent='✅ 저장되었습니다.';load(); },
