@@ -13,7 +13,7 @@
   .sub{color:var(--gray);font-size:13px;margin-bottom:16px;}
   .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px;box-shadow:0 4px 16px rgba(31,58,99,.05);margin-bottom:14px;}
   .btn{padding:9px 16px;border:none;border-radius:9px;background:var(--blue);color:#fff;font-weight:700;font-size:14px;cursor:pointer;}
-  .btn:hover{background:var(--navy);} .btn.ghost{background:#eef1f7;color:var(--navy);}
+  .btn:hover{background:var(--navy);} .btn:disabled{background:#aab4c5;cursor:not-allowed;} .btn.ghost{background:#eef1f7;color:var(--navy);}
   .btn.sm{padding:5px 10px;font-size:12.5px;border-radius:8px;} .btn.red{background:#fbeceb;color:var(--danger);}
   .btn.green{background:#e6f4ec;color:var(--ok);border:1px solid #bfe3ce;}
   input[type=password]{padding:11px 12px;border:1.5px solid var(--line);border-radius:10px;font-size:15px;outline:none;width:100%;}
@@ -76,7 +76,7 @@
     <label style="font-size:13px;font-weight:700;color:var(--navy)">관리자 PIN</label>
     <input type="password" id="pin" placeholder="PIN 입력" style="margin-top:6px" onkeydown="if(event.key==='Enter')login()">
     <div class="stat" id="gateMsg"></div>
-    <button class="btn" style="width:100%;margin-top:12px" onclick="login()">로그인</button>
+    <button class="btn" id="loginBtn" style="width:100%;margin-top:12px" onclick="login()">로그인</button>
     <div class="hint">기본 PIN은 설정 시트의 <b>관리자PIN</b> 값입니다.</div>
   </div>
 
@@ -127,11 +127,15 @@ function call(action, params, onOk, onErr){
 }
 var PIN='',DATA=null;
 function login(){
-  var pin=document.getElementById('pin').value.trim();document.getElementById('gateMsg').textContent='';
+  var pin=document.getElementById('pin').value.trim();
+  var gm=document.getElementById('gateMsg'), lb=document.getElementById('loginBtn');
+  if(!pin){ gm.textContent='PIN을 입력하세요.'; return; }
+  gm.textContent=''; lb.disabled=true; lb.textContent='확인 중…';
   call('getAdminData',{pin:pin},function(r){
-    if(!r.ok){document.getElementById('gateMsg').textContent='PIN이 올바르지 않습니다.';return;}
+    lb.disabled=false; lb.textContent='로그인';
+    if(!r.ok){ gm.textContent='PIN이 올바르지 않습니다.'; return; }
     PIN=pin;document.getElementById('gate').style.display='none';document.getElementById('dash').style.display='block';load();
-  },function(){document.getElementById('gateMsg').textContent='오류가 발생했습니다.';});
+  },function(){ lb.disabled=false; lb.textContent='로그인'; gm.textContent='연결 오류입니다. 잠시 후 다시 시도하세요.'; });
 }
 function load(){ call('getAdminData',{pin:PIN},function(r){ if(!r.ok){alert(r.msg||'불러오기 실패');return;} DATA=r; render(r); },
   function(){alert('불러오기 실패');}); }
