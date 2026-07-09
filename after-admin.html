@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<style>
+  :root{--navy:#1f3a63;--blue:#2f5496;--sky:#e8eef8;--line:#d7dee9;--ok:#1f8a52;--okbg:#e6f4ec;
+        --gray:#7a8699;--danger:#c0392b;--bg:#f4f6fb;--amber:#9a6b00;}
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,'Malgun Gothic','Apple SD Gothic Neo',sans-serif;background:var(--bg);color:#1c2430;}
+  .wrap{max-width:1060px;margin:0 auto;padding:20px 16px 60px;}
+  h1{font-size:20px;color:var(--navy);margin:0 0 2px;}
+  .sub{color:var(--gray);font-size:13px;margin-bottom:16px;}
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px;box-shadow:0 4px 16px rgba(31,58,99,.05);margin-bottom:14px;}
+  .btn{padding:9px 16px;border:none;border-radius:9px;background:var(--blue);color:#fff;font-weight:700;font-size:14px;cursor:pointer;}
+  .btn:hover{background:var(--navy);} .btn.ghost{background:#eef1f7;color:var(--navy);}
+  .btn.sm{padding:5px 10px;font-size:12.5px;border-radius:8px;} .btn.red{background:#fbeceb;color:var(--danger);}
+  .btn.green{background:#e6f4ec;color:var(--ok);border:1px solid #bfe3ce;}
+  input[type=password]{padding:11px 12px;border:1.5px solid var(--line);border-radius:10px;font-size:15px;outline:none;width:100%;}
+  input[type=datetime-local]{padding:8px 10px;border:1.5px solid var(--line);border-radius:9px;font-size:13.5px;outline:none;}
+  label.fld{font-size:12.5px;color:var(--gray);display:inline-flex;flex-direction:column;gap:3px;}
+  .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
+  .kpi{display:flex;gap:12px;flex-wrap:wrap;}
+  .kpi .box{flex:1;min-width:120px;background:var(--sky);border-radius:12px;padding:14px 16px;}
+  .kpi .box b{display:block;font-size:26px;color:var(--navy);} .kpi .box span{font-size:12.5px;color:var(--gray);}
+  .toggle{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:var(--navy);}
+  .pill{font-size:12px;font-weight:800;padding:3px 10px;border-radius:20px;}
+  .pill.on{background:var(--okbg);color:var(--ok);} .pill.off{background:#f0e2e2;color:var(--danger);}
+  .blockhead{margin:20px 2px 8px;font-size:16px;font-weight:800;color:var(--navy);display:flex;align-items:center;gap:8px;}
+  .blockhead .bt{font-size:11px;font-weight:800;padding:2px 9px;border-radius:20px;background:#e6eefc;color:var(--blue);}
+  .prog{border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden;}
+  .phead{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;background:#fbfcfe;}
+  .phead:hover{background:#f4f7fd;}
+  .pname{font-weight:800;font-size:15px;color:var(--navy);} .pmeta{font-size:12px;color:var(--gray);margin-top:2px;}
+  .bar{height:7px;background:#eef1f6;border-radius:6px;overflow:hidden;width:150px;margin-top:6px;}
+  .bar i{display:block;height:100%;background:var(--blue);} .bar i.over{background:var(--danger);}
+  .cnt{text-align:right;font-size:13px;color:var(--gray);min-width:96px;} .cnt b{font-size:18px;color:var(--navy);}
+  .otag{font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:20px;background:#f7e0dd;color:var(--danger);margin-left:6px;}
+  table.rt{width:100%;border-collapse:collapse;font-size:13px;}
+  table.rt th,table.rt td{padding:8px 10px;border-bottom:1px solid #eef1f6;text-align:left;}
+  table.rt th{background:#f6f8fc;color:var(--navy);font-size:12px;}
+  td.num{color:var(--gray);width:40px;text-align:center;}
+  tr.pri{background:#fffaf0;}
+  .prtag{font-size:10.5px;font-weight:800;padding:1px 7px;border-radius:12px;background:#fff3d6;color:var(--amber);}
+  .selchip{font-size:11px;font-weight:800;padding:2px 9px;border-radius:20px;}
+  .selchip.y{background:var(--okbg);color:var(--ok);} .selchip.n{background:#eceff4;color:var(--gray);}
+  .body{display:none;padding:4px 16px 14px;} .body.open{display:block;}
+  .legend{font-size:12px;color:var(--gray);margin:2px 0 8px;}
+  .empty{color:var(--gray);font-size:13px;padding:10px 0;}
+  #gate{max-width:360px;margin:14vh auto 0;}
+  .hint{color:var(--gray);font-size:12px;margin-top:10px;} .stat{color:var(--danger);font-size:13px;min-height:18px;}
+
+  /* 인쇄용 학생 시간표 카드 */
+  #printRoot{display:none;}
+  .tcard{border:1px dashed #999;border-radius:8px;padding:10px 12px;margin:6px;width:48%;box-sizing:border-box;}
+  .tcard h3{margin:0 0 6px;font-size:14px;color:#000;}
+  .tcard h3 span{font-weight:400;color:#444;font-size:12px;}
+  table.tt{width:100%;border-collapse:collapse;}
+  table.tt th,table.tt td{border:1px solid #666;padding:4px 3px;text-align:center;font-size:11px;height:30px;}
+  table.tt th{background:#eee;}
+  table.tt td.sl{background:#f3f3f3;font-weight:700;font-size:9.5px;line-height:1.15;width:70px;}
+  table.tt td .pl{display:block;font-size:9px;color:#555;font-weight:400;}
+  @media print{
+    #gate,#dash{display:none !important;}
+    #printRoot{display:flex !important;flex-wrap:wrap;align-content:flex-start;}
+    .tcard{page-break-inside:avoid;break-inside:avoid;}
+    @page{margin:8mm;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="gate" class="card">
+    <h1>관리자 로그인</h1>
+    <div class="sub">방과후학교 신청 현황 · 예산예화여자고등학교</div>
+    <label style="font-size:13px;font-weight:700;color:var(--navy)">관리자 PIN</label>
+    <input type="password" id="pin" placeholder="PIN 입력" style="margin-top:6px" onkeydown="if(event.key==='Enter')login()">
+    <div class="stat" id="gateMsg"></div>
+    <button class="btn" style="width:100%;margin-top:12px" onclick="login()">로그인</button>
+    <div class="hint">기본 PIN은 설정 시트의 <b>관리자PIN</b> 값입니다.</div>
+  </div>
+
+  <div id="dash" style="display:none">
+    <div class="row" style="justify-content:space-between">
+      <div><h1>방과후학교 신청 현황</h1><div class="sub" id="stamp"></div></div>
+      <button class="btn ghost" onclick="load()">↻ 새로고침</button>
+    </div>
+    <div class="card">
+      <div class="kpi" style="margin-bottom:14px">
+        <div class="box"><b id="kStu">0</b><span>신청 학생 수</span></div>
+        <div class="box"><b id="kApp">0</b><span>총 접수 건수</span></div>
+        <div class="box"><b id="kOver">0</b><span>정원 초과 강좌</span></div>
+      </div>
+      <div class="row" style="justify-content:space-between;border-top:1px solid var(--line);padding-top:14px">
+        <div class="toggle">신청 접수 <span class="pill" id="pStatus">-</span>
+          <button class="btn sm ghost" id="btnStatus" onclick="toggleStatus()">전환</button></div>
+        <div class="row" style="gap:8px">
+          <button class="btn sm green" onclick="printTimetables()">🖨️ 학생 시간표 출력(PDF)</button>
+          <button class="btn sm ghost" onclick="exportAll()">⬇ 전체 CSV</button>
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--line);margin-top:12px;padding-top:12px">
+        <div class="toggle" style="margin-bottom:8px">🗓️ 신청 가능 시간 <span id="schedText" style="font-weight:600;color:var(--blue)"></span></div>
+        <div class="row">
+          <label class="fld">시작<input type="datetime-local" id="schStart"></label>
+          <label class="fld">종료<input type="datetime-local" id="schEnd"></label>
+          <button class="btn sm" onclick="saveSchedule()">시간 저장</button>
+          <button class="btn sm ghost" onclick="clearSchedule()">시간제한 해제</button>
+        </div>
+        <div class="hint" id="schMsg">시작 시각 전에는 학생 화면에 카운트다운이 표시되고, 시간이 되면 자동으로 열립니다.</div>
+      </div>
+      <div class="hint">※ <b>선정예상</b>은 <b>우선권 → 선착순</b> 순으로 정원까지 채운 참고용 결과입니다. 최종 결정은 선생님이 하시면 됩니다.<br>
+      🖨️ <b>학생 시간표 출력</b>은 인쇄 창에서 <b>PDF로 저장</b>하면 됩니다. 한 학생 시간표가 페이지에 걸쳐 잘리지 않게 배치됩니다(점선대로 잘라 배부).</div>
+    </div>
+    <div id="blocks"></div>
+  </div>
+</div>
+<div id="printRoot"></div>
+
+<script>
+var API_URL = "https://script.google.com/macros/s/AKfycbyeSxtsgT70FueyNelyC4h2wFSR_RjzLHtretsAYGyteqg-ABdBoLUpjirJdAB6SWcxHA/exec";  // 예: https://script.google.com/macros/s/AKfy.../exec
+function call(action, params, onOk, onErr){
+  fetch(API_URL, {method:'POST', body: JSON.stringify(Object.assign({action:action}, params||{}))})
+    .then(function(r){ return r.json(); })
+    .then(function(r){ if(onOk) onOk(r); })
+    .catch(function(e){ (onErr||function(){})(e); });
+}
+var PIN='',DATA=null;
+function login(){
+  var pin=document.getElementById('pin').value.trim();document.getElementById('gateMsg').textContent='';
+  call('getAdminData',{pin:pin},function(r){
+    if(!r.ok){document.getElementById('gateMsg').textContent='PIN이 올바르지 않습니다.';return;}
+    PIN=pin;document.getElementById('gate').style.display='none';document.getElementById('dash').style.display='block';load();
+  },function(){document.getElementById('gateMsg').textContent='오류가 발생했습니다.';});
+}
+function load(){ call('getAdminData',{pin:PIN},function(r){ if(!r.ok){alert(r.msg||'불러오기 실패');return;} DATA=r; render(r); },
+  function(){alert('불러오기 실패');}); }
+
+function render(r){
+  document.getElementById('stamp').textContent='갱신: '+new Date().toLocaleString('ko-KR');
+  document.getElementById('kStu').textContent=r.총신청인원;
+  document.getElementById('kApp').textContent=r.총접수건;
+  var over=0; r.blocks.forEach(function(b){ b.courses.forEach(function(c){ if(c.초과) over++; }); });
+  document.getElementById('kOver').textContent=over;
+  var st=document.getElementById('pStatus');st.textContent=r.상태;st.className='pill '+(r.상태==='열림'?'on':'off');
+  document.getElementById('btnStatus').textContent=(r.상태==='열림'?'마감하기':'열기');
+  var schT=document.getElementById('schedText');
+  schT.textContent=(r.신청시작||r.신청종료)?('· '+(r.신청시작||'(제한없음)')+'  ~  '+(r.신청종료||'(제한없음)')):'· 상시 열림 (시간 제한 없음)';
+  document.getElementById('schStart').value=r.신청시작Input||'';document.getElementById('schEnd').value=r.신청종료Input||'';
+
+  var box=document.getElementById('blocks');box.innerHTML='';var ci=0;
+  r.blocks.forEach(function(b){
+    var h=document.createElement('div');h.className='blockhead';
+    h.innerHTML=b.블록명+'<span class="bt">'+(b.유형==='야자'?'요일 체크':'강좌 선택')+'</span>';box.appendChild(h);
+    if(!b.courses.length){ var e=document.createElement('div');e.className='empty';e.style.margin='0 4px 8px';e.textContent='개설된 강좌가 없습니다.';box.appendChild(e);return; }
+    b.courses.forEach(function(c){ box.appendChild(courseCard(c,ci++)); });
+  });
+}
+function courseCard(p,idx){
+  var cap=(p.정원==='제한없음')?'∞':p.정원;
+  var pct=(p.정원==='제한없음')?0:Math.min(100,Math.round(p.신청/Math.max(1,p.정원)*100));
+  var sel=(p.정원==='제한없음')?p.신청:Math.min(p.신청,p.정원);
+  var pre=[p.요일,p.장소,p.강사].filter(Boolean).join(' · ');
+  var el=document.createElement('div');el.className='prog';
+  el.innerHTML='<div class="phead" onclick="toggleBody('+idx+')">'+
+      '<div><div class="pname">'+p.프로그램명+(p.초과?'<span class="otag">정원초과</span>':'')+'</div>'+
+        '<div class="pmeta">'+(pre?pre+' · ':'')+'우선권 '+p.우선권수+'명 · 선정예상 '+sel+(p.대기?(' / 대기 '+p.대기):'')+'</div>'+
+        '<div class="bar"><i class="'+(p.초과?'over':'')+'" style="width:'+pct+'%"></i></div></div>'+
+      '<div class="cnt"><b>'+p.신청+'</b> / '+cap+'명<br><button class="btn sm ghost" onclick="event.stopPropagation();exportOne(\''+p.프로그램ID+'\')">CSV</button></div>'+
+    '</div><div class="body" id="body'+idx+'"><div class="legend">신청 순서(선착순)대로 표시. <span class="prtag">우선권</span>은 노란 배경.</div>'+renderTable(p.신청자)+'</div>';
+  return el;
+}
+function renderTable(list){
+  if(!list.length) return '<div class="empty">아직 신청자가 없습니다.</div>';
+  var rows=list.map(function(s){ var sel=s.선정?'<span class="selchip y">선정</span>':'<span class="selchip n">대기</span>';
+    return '<tr class="'+(s.우선권?'pri':'')+'"><td class="num">'+s.순번+'</td><td>'+s.학번+'</td><td>'+s.이름+'</td><td>'+s.기숙사여부+'</td>'+
+      '<td>'+(s.우선권?'<span class="prtag">우선권</span>':'')+'</td><td>'+sel+'</td><td style="color:#7a8699">'+s.시각+'</td>'+
+      '<td><button class="btn sm red" onclick="cancelS(\''+s.학번+'\',\''+s.이름+'\')">취소</button></td></tr>'; }).join('');
+  return '<table class="rt"><thead><tr><th>순번</th><th>학번</th><th>이름</th><th>구분</th><th>우선권</th><th>선정예상</th><th>신청시각</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>';
+}
+function toggleBody(i){ document.getElementById('body'+i).classList.toggle('open'); }
+function toggleStatus(){ call('setSystemStatus',{pin:PIN,open:DATA.상태!=='열림'},function(){load();}); }
+function saveSchedule(){ var s=document.getElementById('schStart').value,e=document.getElementById('schEnd').value,m=document.getElementById('schMsg');m.textContent='저장 중…';
+  call('setSchedule',{pin:PIN,startStr:s,endStr:e},function(res){ if(!res.ok){m.textContent='⚠️ '+res.msg;return;} m.textContent='✅ 저장되었습니다.';load(); },
+    function(){m.textContent='저장에 실패했습니다.';}); }
+function clearSchedule(){ if(!confirm('시간 제한을 해제하고 상시 열림으로 바꿀까요?'))return; call('setSchedule',{pin:PIN,startStr:'',endStr:''},function(){load();}); }
+function cancelS(sid,name){ if(!confirm(name+'('+sid+') 학생의 신청을 전부 취소할까요?'))return; call('cancelStudent',{pin:PIN,'학번':sid},function(){load();}); }
+
+/* 학생 시간표 인쇄 */
+function slotShort(s){ var m=String(s).split(' '); return {name:m[0], time:m.slice(1).join(' ')}; }
+function printTimetables(){
+  if(!DATA||!DATA.students.length){ alert('아직 신청한 학생이 없습니다.'); return; }
+  var slots=DATA.slots, days=DATA.days;
+  var html=DATA.students.map(function(stu){
+    var grid={}; stu.cells.forEach(function(c){ (c.요일||[]).forEach(function(d){ grid[c.시간대+'|'+d]={name:c.프로그램명,place:c.장소}; }); });
+    var thead='<th></th>'+days.map(function(d){return '<th>'+d+'</th>';}).join('');
+    var rows=slots.map(function(sl){ var s=slotShort(sl);
+      var tds=days.map(function(d){ var g=grid[sl+'|'+d];
+        return '<td>'+(g?(g.name+(g.place?'<span class="pl">'+g.place+'</span>':'')):'')+'</td>'; }).join('');
+      return '<tr><td class="sl">'+s.name+'<span class="pl">'+s.time+'</span></td>'+tds+'</tr>'; }).join('');
+    var head=(stu.학년?(stu.학년+'학년 '):'')+(stu.반?(stu.반+'반 '):'');
+    return '<div class="tcard"><h3>'+stu.이름+' <span>'+head+'· '+stu.학번+' · '+stu.기숙사여부+'</span></h3>'+
+      '<table class="tt"><tr>'+thead+'</tr>'+rows+'</table></div>';
+  }).join('');
+  document.getElementById('printRoot').innerHTML=html;
+  window.print();
+}
+
+/* CSV */
+function csvCell(v){ v=String(v==null?'':v); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }
+function download(name,text){ var blob=new Blob(['\uFEFF'+text],{type:'text/csv;charset=utf-8;'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove(); }
+function findCourse(pid){ var f=null; DATA.blocks.forEach(function(b){ b.courses.forEach(function(c){ if(c.프로그램ID===pid) f={b:b,c:c}; }); }); return f; }
+function exportOne(pid){ var f=findCourse(pid); if(!f)return;
+  var rows=[['시간대','강좌','요일','순번','학번','이름','구분','우선권','선정예상','신청시각'].join(',')];
+  f.c.신청자.forEach(function(s){ rows.push([f.b.블록명,f.c.프로그램명,f.c.요일,s.순번,s.학번,s.이름,s.기숙사여부,(s.우선권?'우선권':''),(s.선정?'선정':'대기'),s.시각].map(csvCell).join(',')); });
+  download('방과후_'+f.c.프로그램명+'.csv',rows.join('\n')); }
+function exportAll(){ var rows=[['시간대','강좌','요일','순번','학번','이름','구분','우선권','선정예상','신청시각'].join(',')];
+  DATA.blocks.forEach(function(b){ b.courses.forEach(function(c){ c.신청자.forEach(function(s){
+    rows.push([b.블록명,c.프로그램명,c.요일,s.순번,s.학번,s.이름,s.기숙사여부,(s.우선권?'우선권':''),(s.선정?'선정':'대기'),s.시각].map(csvCell).join(',')); }); }); });
+  download('방과후_전체신청현황.csv',rows.join('\n')); }
+</script>
+</body>
+</html>

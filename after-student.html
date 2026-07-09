@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<style>
+  :root{--navy:#1f3a63;--blue:#2f5496;--sky:#e8eef8;--line:#d7dee9;--ok:#1f8a52;--okbg:#e6f4ec;
+        --gray:#7a8699;--danger:#c0392b;--bg:#f4f6fb;--amber:#9a6b00;--amberbg:#fff3d6;}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{margin:0;font-family:-apple-system,'Malgun Gothic','Apple SD Gothic Neo',sans-serif;background:var(--bg);color:#1c2430;line-height:1.5;}
+  .wrap{max-width:580px;margin:0 auto;padding:18px 16px 60px;}
+  .card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px 20px;box-shadow:0 6px 24px rgba(31,58,99,.06);}
+  h1{font-size:19px;margin:0 0 2px;color:var(--navy);}
+  .sub{color:var(--gray);font-size:13px;margin-bottom:16px;}
+  .steps{display:flex;gap:6px;margin-bottom:20px;}
+  .steps i{flex:1;height:5px;border-radius:4px;background:var(--line);transition:.3s;}
+  .steps i.on{background:var(--blue);}
+  label{display:block;font-weight:700;font-size:14px;margin:14px 0 6px;color:var(--navy);}
+  input[type=text]{width:100%;padding:14px;border:1.5px solid var(--line);border-radius:12px;font-size:16px;outline:none;transition:.15s;}
+  input[type=text]:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(47,84,150,.12);}
+  .help{font-size:12px;color:var(--gray);margin-top:6px;}
+  .btn{width:100%;padding:15px;border:none;border-radius:12px;background:var(--blue);color:#fff;font-size:16px;font-weight:700;cursor:pointer;margin-top:18px;transition:.15s;}
+  .btn:hover{background:var(--navy);} .btn:disabled{background:#aab4c5;cursor:not-allowed;}
+  .btn.ghost{background:#eef1f7;color:var(--navy);margin-top:8px;}
+  .pick{display:flex;gap:12px;margin-top:6px;}
+  .pick button{flex:1;padding:24px 10px;border:2px solid var(--line);border-radius:16px;background:#fff;font-size:17px;font-weight:800;color:var(--navy);cursor:pointer;transition:.15s;}
+  .pick button .ico{font-size:30px;display:block;margin-bottom:6px;}
+  .pick button.sel{border-color:var(--blue);background:var(--sky);}
+  /* 실시간 시간표 */
+  .tt{position:sticky;top:0;z-index:5;background:#fff;padding:8px 0 8px;border-bottom:1px solid var(--line);margin-bottom:6px;}
+  .tt table{width:100%;border-collapse:collapse;table-layout:fixed;}
+  .tt th,.tt td{border:1px solid var(--line);padding:5px 3px;text-align:center;font-size:11px;vertical-align:middle;}
+  .tt th{background:#f4f6fb;color:var(--navy);font-weight:800;}
+  .tt th.slot,.tt td.slot{width:64px;background:#f4f6fb;color:var(--navy);font-weight:800;font-size:10px;line-height:1.2;}
+  .tt td.cell{height:38px;color:var(--gray);}
+  .tt td.cell.full{background:var(--okbg);color:var(--ok);font-weight:800;font-size:11px;}
+  .tt td.cell .pl{display:block;font-weight:500;color:#5c7; font-size:9.5px;}
+  .blk{margin-top:16px;}
+  .blk .bt{font-weight:800;color:var(--navy);font-size:15px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:2px;}
+  .req{font-size:11px;font-weight:800;background:#fdecea;color:var(--danger);padding:2px 8px;border-radius:20px;}
+  .slotbadge{font-size:11px;font-weight:700;background:#eef1f7;color:var(--gray);padding:2px 8px;border-radius:20px;}
+  .items{display:flex;flex-direction:column;gap:8px;margin-top:8px;}
+  .it{border:2px solid var(--line);border-radius:13px;padding:11px 14px;cursor:pointer;transition:.12s;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+  .it:hover{border-color:#b9c6dc;} .it.sel{border-color:var(--blue);background:var(--sky);}
+  .it.dis{opacity:.5;cursor:not-allowed;background:#f6f7f9;}
+  .it .nm{font-weight:800;font-size:15px;color:var(--navy);}
+  .it .meta{font-size:12px;color:var(--gray);margin-top:2px;}
+  .daytag{display:inline-block;font-size:11px;font-weight:800;background:#e6eefc;color:var(--blue);border-radius:6px;padding:1px 6px;margin-right:3px;}
+  .it.sel .daytag{background:#d5e2f7;}
+  .place{color:var(--amber);font-weight:700;}
+  .star{font-size:11px;font-weight:800;color:var(--amber);background:var(--amberbg);border-radius:20px;padding:2px 7px;margin-left:5px;}
+  .chk{font-size:20px;color:var(--blue);min-width:22px;text-align:center;}
+  .conf{font-size:11px;color:var(--danger);font-weight:700;margin-top:2px;}
+  .msg{padding:12px 14px;border-radius:12px;font-size:14px;margin-top:12px;display:none;}
+  .msg.err{background:#fbeceb;color:var(--danger);display:block;}
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#33261f;color:#fff;padding:11px 16px;border-radius:12px;font-size:13.5px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:0;transition:.25s;pointer-events:none;z-index:20;max-width:90%;text-align:center;}
+  .toast.show{opacity:1;}
+  .result{text-align:center;padding:14px 0;} .result .big{font-size:56px;margin:6px 0;}
+  .result h2{color:var(--ok);margin:4px 0;} .result.fail h2{color:var(--danger);}
+  .box{background:var(--sky);border-radius:14px;padding:16px;margin-top:14px;text-align:left;}
+  .box b{color:var(--navy);} .box .li{padding:6px 0;border-bottom:1px dashed #cdd8ea;} .box .li:last-child{border-bottom:none;}
+  .box .li span{color:var(--gray);font-size:13px;}
+  .spin{display:none;text-align:center;color:var(--gray);padding:20px;font-size:14px;}
+  .hidden{display:none;} .foot{text-align:center;color:#a7b0be;font-size:12px;margin-top:22px;}
+  .gate{text-align:center;padding:10px 0 6px;} .gate .big{font-size:52px;margin:2px 0 6px;}
+  .gate h2{margin:2px 0;color:var(--navy);font-size:20px;} .gate p{color:var(--gray);font-size:14px;margin:6px 0;}
+  .gate .when{display:inline-block;background:var(--sky);color:var(--navy);font-weight:800;border-radius:12px;padding:9px 14px;margin:6px 0 14px;font-size:15px;}
+  .cd{display:flex;justify-content:center;gap:8px;margin:8px 0 4px;}
+  .cd .u{background:var(--navy);color:#fff;border-radius:14px;padding:12px 6px;min-width:66px;}
+  .cd .u b{display:block;font-size:30px;line-height:1;font-variant-numeric:tabular-nums;} .cd .u span{font-size:11px;opacity:.8;}
+  .gate.closed .big{filter:grayscale(1);} .gate.closed h2{color:var(--danger);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>2026학년도 2학기 방과후학교 신청</h1>
+    <div class="sub">예산예화여자고등학교</div>
+    <div id="bootLoad" class="spin" style="display:block">신청 정보를 확인하는 중…</div>
+    <div id="gate" class="hidden"></div>
+    <div id="app" class="hidden">
+    <div class="steps"><i id="s1"></i><i id="s2"></i><i id="s3"></i><i id="s4"></i></div>
+
+    <section id="step1">
+      <label>학번</label>
+      <input type="text" id="sid" inputmode="numeric" placeholder="예) 1101" autocomplete="off">
+      <label>이름</label>
+      <input type="text" id="sname" placeholder="이름을 입력하세요" autocomplete="off">
+      <div id="msg1" class="msg"></div>
+      <button class="btn" id="btn1" onclick="verify()">다음 단계 &rarr;</button>
+    </section>
+
+    <section id="step2" class="hidden">
+      <label>재학 형태를 선택하세요</label>
+      <div class="pick">
+        <button id="p-dorm" onclick="pickDorm('기숙사')"><span class="ico">🏠</span>기숙사생</button>
+        <button id="p-comm" onclick="pickDorm('통학')"><span class="ico">🚌</span>통학생</button>
+      </div>
+      <div class="help">기숙사생은 8교시 방과후가 필수입니다.</div>
+      <button class="btn" id="btn2" onclick="goStructure()" disabled>다음 단계 &rarr;</button>
+      <button class="btn ghost" onclick="setStep(1)">&larr; 이전</button>
+    </section>
+
+    <section id="step3" class="hidden">
+      <label>신청할 프로그램을 선택하세요 (여러 개 가능)</label>
+      <div class="help">같은 시간대·같은 요일에는 하나만 신청됩니다. 위 시간표가 실시간으로 채워져요.</div>
+      <div class="spin" id="load3" style="display:block">불러오는 중…</div>
+      <div class="tt hidden" id="tt"></div>
+      <div id="blocks"></div>
+      <div id="msg3" class="msg"></div>
+      <button class="btn" id="btn3" onclick="submitAll()">신청 제출 &rarr;</button>
+      <button class="btn ghost" onclick="setStep(2)">&larr; 이전</button>
+    </section>
+
+    <section id="step4" class="hidden">
+      <div class="spin" id="load4">신청 처리 중…</div>
+      <div id="resultBox"></div>
+    </section>
+    </div>
+  </div>
+  <div class="foot">문의는 담당 선생님께 · 신청은 1인 1회만 가능합니다</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var API_URL = "https://script.google.com/macros/s/AKfycbyeSxtsgT70FueyNelyC4h2wFSR_RjzLHtretsAYGyteqg-ABdBoLUpjirJdAB6SWcxHA/exec";  // 예: https://script.google.com/macros/s/AKfy.../exec
+function call(action, params, onOk, onErr){
+  fetch(API_URL, {method:'POST', body: JSON.stringify(Object.assign({action:action}, params||{}))})
+    .then(function(r){ return r.json(); })
+    .then(function(r){ if(onOk) onOk(r); })
+    .catch(function(e){ (onErr||function(){})(e); });
+}
+var S={학번:'',이름:'',기숙사여부:''};
+var BLOCKS=[],ITEM={},SELECTED={},SLOTS=[],DAYS=[];
+
+function setStep(n){[1,2,3,4].forEach(function(i){
+  document.getElementById('step'+i).classList.toggle('hidden',i!==n);
+  document.getElementById('s'+i).classList.toggle('on',i<=n);}); window.scrollTo(0,0);}
+function showMsg(id,t){var m=document.getElementById(id);m.textContent=t;m.className='msg err';}
+function clearMsg(id){document.getElementById(id).className='msg';}
+function toast(t){var el=document.getElementById('toast');el.textContent=t;el.classList.add('show');
+  clearTimeout(el._t);el._t=setTimeout(function(){el.classList.remove('show');},2200);}
+function slotShort(s){ return String(s).split(' ')[0]; } // "8교시 (16:40~17:30)" → "8교시"
+
+/* STEP1 */
+function verify(){
+  var sid=document.getElementById('sid').value.trim(),name=document.getElementById('sname').value.trim();
+  clearMsg('msg1'); if(!sid||!name){showMsg('msg1','학번과 이름을 모두 입력하세요.');return;}
+  var b=document.getElementById('btn1');b.disabled=true;b.textContent='확인 중…';
+  call('verifyStudent',{'학번':sid,'이름':name},function(r){
+    b.disabled=false;b.textContent='다음 단계 →';
+    if(!r.ok){showMsg('msg1',r.msg);return;}
+    S.학번=sid;S.이름=name; if(r.already){showAlready(r.prev);return;} setStep(2);
+  },function(){b.disabled=false;b.textContent='다음 단계 →';showMsg('msg1','오류가 발생했습니다. 다시 시도하세요.');});
+}
+function liList(arr){ return (arr||[]).map(function(p){
+  return '<div class="li"><b>'+p.프로그램명+'</b> <span>· '+p.블록명+(p.요일?(' · '+p.요일):'')+'</span></div>'; }).join(''); }
+function showAlready(prev){ setStep(4);document.getElementById('load4').style.display='none';
+  document.getElementById('resultBox').innerHTML='<div class="result"><div class="big">✅</div><h2>이미 신청을 완료했습니다</h2>'+
+    '<div class="box"><b>'+S.이름+'</b> 학생의 신청 내역<br><br>'+(liList(prev)||'선택한 프로그램이 없습니다.')+'</div>'+
+    '<p style="color:#7a8699;font-size:13px;margin-top:14px;">변경이 필요하면 담당 선생님께 문의하세요.</p></div>'; }
+
+/* STEP2 */
+function pickDorm(v){S.기숙사여부=v;
+  document.getElementById('p-dorm').classList.toggle('sel',v==='기숙사');
+  document.getElementById('p-comm').classList.toggle('sel',v==='통학');
+  document.getElementById('btn2').disabled=false;}
+
+/* STEP3 */
+function goStructure(){
+  setStep(3);clearMsg('msg3');SELECTED={};ITEM={};
+  document.getElementById('load3').style.display='block';
+  document.getElementById('blocks').innerHTML='';document.getElementById('tt').classList.add('hidden');
+  call('getStructure',{'학번':S.학번,'기숙사여부':S.기숙사여부},renderStructure,
+    function(){document.getElementById('load3').textContent='불러오기 실패. 이전으로 돌아가 다시 시도하세요.';});
+}
+function renderStructure(r){
+  document.getElementById('load3').style.display='none';
+  if(!r.ok){showMsg('msg3',r.msg);return;}
+  BLOCKS=r.blocks;SLOTS=r.slots;DAYS=r.days;ITEM={};
+  BLOCKS.forEach(function(b){b.items.forEach(function(it){it.블록ID=b.블록ID;it.블록명=b.블록명;ITEM[it.프로그램ID]=it;});});
+  var box=document.getElementById('blocks');box.innerHTML='';
+  BLOCKS.forEach(function(b){
+    if(!b.items.length) return;
+    var req=(b.기숙사필수&&S.기숙사여부==='기숙사');
+    var d=document.createElement('div');d.className='blk';
+    d.innerHTML='<div class="bt">'+b.블록명+'<span class="slotbadge">'+slotShort(b.시간대)+'</span>'+(req?'<span class="req">필수</span>':'')+'</div>'+
+      '<div class="items" id="items_'+b.블록ID+'"></div>';
+    box.appendChild(d);
+    var wrap=d.querySelector('.items'); b.items.forEach(function(it){ wrap.appendChild(itemEl(it)); });
+  });
+  document.getElementById('tt').classList.remove('hidden');
+  refresh();
+}
+function itemEl(it){
+  var el=document.createElement('div');el.className='it';el.id='it_'+it.프로그램ID;
+  el.onclick=function(){ toggle(it.프로그램ID); };
+  var days=it.요일.map(function(d){return '<span class="daytag">'+d+'</span>';}).join('');
+  var meta=days+(it.강사?(' &nbsp;'+it.강사):'')+(it.장소?(' · <span class="place">'+it.장소+'</span>'):'');
+  el.innerHTML='<div><div class="nm">'+it.프로그램명+(it.우선권?'<span class="star">우선</span>':'')+'</div>'+
+    '<div class="meta">'+meta+'</div><div class="conf" id="conf_'+it.프로그램ID+'"></div></div>'+
+    '<div class="chk" id="chk_'+it.프로그램ID+'"></div>';
+  return el;
+}
+function usedCells(){ var u={}; Object.keys(SELECTED).forEach(function(id){ var it=ITEM[id];
+  it.요일.forEach(function(d){ u[it.시간대+'|'+d]=it; }); }); return u; }
+function toggle(id){
+  var it=ITEM[id];
+  if(SELECTED[id]){ delete SELECTED[id]; refresh(); return; }
+  var u=usedCells();
+  for(var i=0;i<it.요일.length;i++){ var k=it.시간대+'|'+it.요일[i];
+    if(u[k]){ toast(slotShort(it.시간대)+' '+it.요일[i]+'요일은 이미 '+u[k].프로그램명); return; } }
+  SELECTED[id]=it; refresh();
+}
+function refresh(){
+  var u=usedCells();
+  Object.keys(ITEM).forEach(function(id){
+    var it=ITEM[id],el=document.getElementById('it_'+id); if(!el) return;
+    var chk=document.getElementById('chk_'+id),conf=document.getElementById('conf_'+id);
+    var selected=!!SELECTED[id],blocked=false,by='';
+    if(!selected){ for(var i=0;i<it.요일.length;i++){ if(u[it.시간대+'|'+it.요일[i]]){blocked=true;by=it.요일[i];break;} } }
+    el.classList.toggle('sel',selected);el.classList.toggle('dis',blocked);
+    chk.textContent=selected?'✔':''; conf.textContent=blocked?(slotShort(it.시간대)+' '+by+'요일 겹침'):'';
+  });
+  renderTT(u);
+}
+function renderTT(u){
+  var th='<th class="slot"></th>'+DAYS.map(function(d){return '<th>'+d+'</th>';}).join('');
+  var body=SLOTS.map(function(slot){
+    var tds=DAYS.map(function(d){ var it=u[slot+'|'+d];
+      if(it) return '<td class="cell full">'+it.프로그램명+(it.장소?'<span class="pl">'+it.장소+'</span>':'')+'</td>';
+      return '<td class="cell">·</td>'; }).join('');
+    return '<tr><td class="slot">'+slot.replace(' (',' <span style="font-weight:400">(')+'</span></td>'+tds+'</tr>';
+  }).join('');
+  document.getElementById('tt').innerHTML='<table><tr>'+th+'</tr>'+body+'</table>';
+}
+function submitAll(){
+  clearMsg('msg3');
+  var reqBlocks=BLOCKS.filter(function(b){return b.기숙사필수&&b.items.length;});
+  if(S.기숙사여부==='기숙사'&&reqBlocks.length){
+    var ok=Object.keys(SELECTED).some(function(id){ return reqBlocks.some(function(b){return b.블록ID===ITEM[id].블록ID;}); });
+    if(!ok){ showMsg('msg3','기숙사생은 '+reqBlocks[0].블록명+'을(를) 반드시 신청해야 합니다.'); return; }
+  }
+  var ids=Object.keys(SELECTED);
+  var b=document.getElementById('btn3');b.disabled=true;b.textContent='제출 중…';
+  setStep(4);document.getElementById('load4').style.display='block';document.getElementById('resultBox').innerHTML='';
+  call('submitApplications',{'학번':S.학번,'이름':S.이름,'기숙사여부':S.기숙사여부,selected:ids},function(r){
+    document.getElementById('load4').style.display='none';b.disabled=false;b.textContent='신청 제출 →';
+    if(r.ok){ document.getElementById('resultBox').innerHTML='<div class="result"><div class="big">🎉</div><h2>신청이 접수되었습니다</h2>'+
+        '<div class="box"><b>'+S.이름+'</b> ('+S.학번+') · '+S.기숙사여부+'<br><br>'+(liList(r.summary)||'선택한 프로그램이 없습니다.')+'</div>'+
+        '<p style="color:#7a8699;font-size:13px;margin-top:14px;">정상적으로 접수되었습니다. 최종 수강 명단은 담당 선생님이 안내합니다.</p></div>';
+    } else { document.getElementById('resultBox').innerHTML='<div class="result fail"><div class="big">⚠️</div><h2>신청되지 않았습니다</h2>'+
+        '<div class="box">'+r.msg+'</div>'+(r.code==='dup'?'':'<button class="btn" onclick="setStep(3)">다시 선택하기 →</button>')+'</div>'; }
+  },function(){
+    document.getElementById('load4').style.display='none';b.disabled=false;b.textContent='신청 제출 →';
+    document.getElementById('resultBox').innerHTML='<div class="result fail"><div class="big">⚠️</div><h2>오류가 발생했습니다</h2>'+
+      '<div class="box">잠시 후 다시 시도해 주세요.</div><button class="btn" onclick="setStep(3)">다시 시도 →</button></div>';
+  });
+}
+
+/* 대기실 */
+var SRV_OFFSET=0,cdTimer=null;
+function boot(){document.getElementById('bootLoad').style.display='block';
+  document.getElementById('app').classList.add('hidden');document.getElementById('gate').classList.add('hidden');
+  call('getWindowInfo',{},function(info){SRV_OFFSET=info.serverNow-Date.now();applyState(info);},openApp);}
+function applyState(info){document.getElementById('bootLoad').style.display='none';
+  if(info.state==='open'){openApp();return;} if(info.state==='before'){renderBefore(info);return;} renderClosed(info);}
+function openApp(){if(cdTimer){clearInterval(cdTimer);cdTimer=null;}
+  document.getElementById('gate').classList.add('hidden');document.getElementById('app').classList.remove('hidden');setStep(1);}
+function fmtWhen(ms){var d=new Date(ms),wk=['일','월','화','수','목','금','토'][d.getDay()];
+  function z(n){return(n<10?'0':'')+n;}return (d.getMonth()+1)+'월 '+d.getDate()+'일('+wk+') '+z(d.getHours())+':'+z(d.getMinutes());}
+function renderBefore(info){var g=document.getElementById('gate');g.classList.remove('hidden');
+  g.innerHTML='<div class="gate"><div class="big">⏳</div><h2>아직 신청 시작 전이에요</h2>'+
+    (info.start?'<div class="when">🗓️ 시작: '+fmtWhen(info.start)+'</div>':'')+'<div class="cd" id="cd"></div>'+
+    '<p>시간이 되면 이 화면이 <b>자동으로</b> 신청 화면으로 바뀌어요.<br>페이지를 닫지 말고 기다려 주세요.</p>'+
+    '<button class="btn ghost" onclick="boot()">새로고침</button></div>';
+  tickCountdown(info.start);if(cdTimer)clearInterval(cdTimer);cdTimer=setInterval(function(){tickCountdown(info.start);},1000);}
+function tickCountdown(startMs){var diff=startMs-(Date.now()+SRV_OFFSET);
+  if(diff<=0){clearInterval(cdTimer);cdTimer=null;call('getWindowInfo',{},applyState,openApp);return;}
+  var s=Math.floor(diff/1000),dd=Math.floor(s/86400);s-=dd*86400;var hh=Math.floor(s/3600);s-=hh*3600;var mm=Math.floor(s/60),ss=s-mm*60;
+  function z(n){return(n<10?'0':'')+n;}var units=[];if(dd>0)units.push(['일',dd]);units.push(['시',z(hh)],['분',z(mm)],['초',z(ss)]);
+  var cd=document.getElementById('cd');if(!cd)return;cd.innerHTML=units.map(function(u){return '<div class="u"><b>'+u[1]+'</b><span>'+u[0]+'</span></div>';}).join('');}
+function renderClosed(info){var g=document.getElementById('gate');g.classList.remove('hidden');
+  var msg=(info.state==='closed_admin')?'신청이 마감되었습니다.':(info.end?'신청이 마감되었습니다. (마감: '+fmtWhen(info.end)+')':'신청이 마감되었습니다.');
+  g.innerHTML='<div class="gate closed"><div class="big">🔒</div><h2>신청 기간이 아닙니다</h2><p>'+msg+'<br>문의는 담당 선생님께 해주세요.</p>'+
+    '<button class="btn ghost" onclick="boot()">새로고침</button></div>';}
+boot();
+</script>
+</body>
+</html>

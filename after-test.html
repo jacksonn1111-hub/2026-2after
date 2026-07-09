@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>방과후 시간표 실시간 테스트</title>
+<style>
+  :root{--navy:#1f3a63;--blue:#2f5496;--sky:#e8eef8;--line:#d7dee9;--ok:#1f8a52;--okbg:#e6f4ec;
+        --gray:#7a8699;--danger:#c0392b;--bg:#f4f6fb;--amber:#9a6b00;--amberbg:#fff3d6;}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{margin:0;font-family:-apple-system,'Malgun Gothic','Apple SD Gothic Neo',sans-serif;background:var(--bg);color:#1c2430;line-height:1.5;}
+  .ribbon{background:var(--amberbg);color:var(--amber);text-align:center;font-weight:800;font-size:13px;padding:9px 12px;border-bottom:1px solid #f0e2b8;}
+  .wrap{max-width:600px;margin:0 auto;padding:16px 16px 60px;}
+  .card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 6px 24px rgba(31,58,99,.06);}
+  h1{font-size:18px;margin:0 0 2px;color:var(--navy);}
+  .sub{color:var(--gray);font-size:13px;margin-bottom:14px;}
+  .pick{display:flex;gap:10px;margin:10px 0 4px;}
+  .pick button{flex:1;padding:12px;border:2px solid var(--line);border-radius:12px;background:#fff;font-weight:800;color:var(--navy);cursor:pointer;}
+  .pick button.sel{border-color:var(--blue);background:var(--sky);}
+  .tt{position:sticky;top:0;z-index:5;background:#fff;padding:8px 0;border-bottom:1px solid var(--line);margin-bottom:6px;}
+  .tt table{width:100%;border-collapse:collapse;table-layout:fixed;}
+  .tt th,.tt td{border:1px solid var(--line);padding:5px 3px;text-align:center;font-size:11px;vertical-align:middle;}
+  .tt th{background:#f4f6fb;color:var(--navy);font-weight:800;}
+  .tt th.slot,.tt td.slot{width:66px;background:#f4f6fb;color:var(--navy);font-weight:800;font-size:10px;line-height:1.2;}
+  .tt td.cell{height:40px;color:var(--gray);}
+  .tt td.cell.full{background:var(--okbg);color:var(--ok);font-weight:800;font-size:11px;}
+  .tt td.cell .pl{display:block;font-weight:500;color:#5c7;font-size:9.5px;}
+  .blk{margin-top:14px;} .blk .bt{font-weight:800;color:var(--navy);font-size:15px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:2px;}
+  .req{font-size:11px;font-weight:800;background:#fdecea;color:var(--danger);padding:2px 8px;border-radius:20px;}
+  .slotbadge{font-size:11px;font-weight:700;background:#eef1f7;color:var(--gray);padding:2px 8px;border-radius:20px;}
+  .items{display:flex;flex-direction:column;gap:8px;margin-top:8px;}
+  .it{border:2px solid var(--line);border-radius:13px;padding:11px 14px;cursor:pointer;transition:.12s;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+  .it.sel{border-color:var(--blue);background:var(--sky);} .it.dis{opacity:.5;cursor:not-allowed;background:#f6f7f9;}
+  .it .nm{font-weight:800;font-size:15px;color:var(--navy);} .it .meta{font-size:12px;color:var(--gray);margin-top:2px;}
+  .daytag{display:inline-block;font-size:11px;font-weight:800;background:#e6eefc;color:var(--blue);border-radius:6px;padding:1px 6px;margin-right:3px;}
+  .it.sel .daytag{background:#d5e2f7;} .place{color:var(--amber);font-weight:700;}
+  .conf{font-size:11px;color:var(--danger);font-weight:700;margin-top:2px;}
+  .chk{font-size:20px;color:var(--blue);min-width:22px;text-align:center;}
+  .btn{width:100%;padding:13px;border:none;border-radius:12px;background:var(--blue);color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-top:14px;}
+  .btn.ghost{background:#eef1f7;color:var(--navy);}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#33261f;color:#fff;padding:11px 16px;border-radius:12px;font-size:13px;font-weight:600;opacity:0;transition:.25s;pointer-events:none;z-index:20;max-width:90%;text-align:center;}
+  .toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div class="ribbon">🧪 시간표 실시간 테스트 · 저장되지 않습니다 (예시 데이터)</div>
+<div class="wrap">
+  <div class="card">
+    <h1>방과후 시간표 실시간 테스트</h1>
+    <div class="sub">프로그램을 눌러보면 위 시간표가 실시간으로 채워지고, 같은 시간대·같은 요일은 자동으로 막힙니다.</div>
+    <div class="pick">
+      <button id="p-dorm" onclick="setDorm('기숙사')">🏠 기숙사생</button>
+      <button id="p-comm" class="sel" onclick="setDorm('통학')">🚌 통학생</button>
+    </div>
+    <div class="tt" id="tt"></div>
+    <div id="blocks"></div>
+    <button class="btn" onclick="testSubmit()">신청 확인(테스트)</button>
+    <button class="btn ghost" onclick="resetSel()">선택 초기화</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var S8="8교시 (16:40~17:30)", SN="야간활동 (18:30~21:20)";
+function it(id,nm,days,slot,강사,장소,대상){ return {프로그램ID:id,프로그램명:nm,요일:days,시간대:slot,강사:강사||'',장소:장소||'',대상:대상||'전체'}; }
+var RAW=[
+ {블록ID:'B1',블록명:'8교시 방과후',시간대:S8,기숙사필수:true,items:[
+   it('P01','수학 심화',['월','화','수','목'],S8,'김OO','교실'),
+   it('P02','영어 독해',['월','화','수','목'],S8,'이OO','교실'),
+   it('P03','일본어 JLPT 자격증반',['월','화','수','목'],S8,'기무라','교실')]},
+ {블록ID:'B2',블록명:'야간 방과후(월수)',시간대:SN,기숙사필수:false,items:[ it('P04','야간 국어',['월','수'],SN,'최OO','교실')]},
+ {블록ID:'B3',블록명:'야간 방과후(화)',시간대:SN,기숙사필수:false,items:[ it('P05','화요 논술',['화'],SN,'한OO','교실')]},
+ {블록ID:'B4',블록명:'야간 방과후(목)',시간대:SN,기숙사필수:false,items:[ it('P06','목요 코딩',['목'],SN,'서OO','전산실','통학')]},
+ {블록ID:'B5',블록명:'야간자율학습',시간대:SN,기숙사필수:false,items:[
+   it('B5_월','야간자율학습(월)',['월'],SN,'','자습실'),it('B5_화','야간자율학습(화)',['화'],SN,'','자습실'),
+   it('B5_수','야간자율학습(수)',['수'],SN,'','자습실'),it('B5_목','야간자율학습(목)',['목'],SN,'','자습실')]},
+ {블록ID:'B6',블록명:'문화예술체육활동 활성화',시간대:SN,기숙사필수:false,items:[
+   it('P10','배구부',['화'],SN,'이운행 외','체육관'),it('P11','배드민턴부',['목'],SN,'이재희','체육관'),
+   it('P12','밴드부',['목'],SN,'김정호 외','1-5반'),it('P13','연극부',['목'],SN,'김익현 외','다목적실'),
+   it('P14','치어리딩부',['목'],SN,'김정호 외','체육관')]},
+ {블록ID:'B7',블록명:'특기적성 취업관련 동아리',시간대:SN,기숙사필수:false,items:[
+   it('P15','꿈길',['월','화','수','목'],SN,'김성연 외','북카페'),it('P16','공무원반',['목'],SN,'김시호','2-6반'),
+   it('P17','세계로',['화'],SN,'이경석','3-2반'),it('P18','NCS 취업반',['화'],SN,'박지만 외','전산회계실'),
+   it('P19','믹솔로지',['화'],SN,'황용하','조리동'),it('P20','바르케미',['화'],SN,'이지우','조리동'),
+   it('P21','퍼스트',['화'],SN,'박지온','조리동'),it('P22','온새미로',['월','화','수','목'],SN,'황태철 외','디지털영상실'),
+   it('P23','댄스부',['화'],SN,'양현석','체육관'),it('P24','쏘잉',['화'],SN,'이주희','다목적실'),
+   it('P25','아트동아리',['월','화','수','목'],SN,'박현일','미술실')]}
+];
+var SLOTS=[S8,SN], DAYS=['월','화','수','목'];
+var 기숙사여부='통학', ITEM={}, SELECTED={};
+
+function slotShort(s){ return String(s).split(' ')[0]; }
+function toast(t){var el=document.getElementById('toast');el.textContent=t;el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(function(){el.classList.remove('show');},2000);}
+
+function setDorm(v){ 기숙사여부=v; SELECTED={};
+  document.getElementById('p-dorm').classList.toggle('sel',v==='기숙사');
+  document.getElementById('p-comm').classList.toggle('sel',v==='통학');
+  render(); }
+
+function render(){
+  ITEM={}; var box=document.getElementById('blocks'); box.innerHTML='';
+  RAW.forEach(function(b){
+    var items=b.items.filter(function(x){ if(x.대상==='기숙사')return 기숙사여부==='기숙사'; if(x.대상==='통학')return 기숙사여부==='통학'; return true; });
+    if(!items.length) return;
+    var req=(b.기숙사필수 && 기숙사여부==='기숙사');
+    var d=document.createElement('div'); d.className='blk';
+    d.innerHTML='<div class="bt">'+b.블록명+'<span class="slotbadge">'+slotShort(b.시간대)+'</span>'+(req?'<span class="req">필수</span>':'')+'</div><div class="items"></div>';
+    var wrap=d.querySelector('.items');
+    items.forEach(function(x){ x.블록ID=b.블록ID; ITEM[x.프로그램ID]=x; wrap.appendChild(itemEl(x)); });
+    box.appendChild(d);
+  });
+  refresh();
+}
+function itemEl(x){
+  var el=document.createElement('div'); el.className='it'; el.id='it_'+x.프로그램ID;
+  el.onclick=function(){ toggle(x.프로그램ID); };
+  var days=x.요일.map(function(d){return '<span class="daytag">'+d+'</span>';}).join('');
+  var meta=days+(x.강사?(' &nbsp;'+x.강사):'')+(x.장소?(' · <span class="place">'+x.장소+'</span>'):'');
+  el.innerHTML='<div><div class="nm">'+x.프로그램명+'</div><div class="meta">'+meta+'</div><div class="conf" id="conf_'+x.프로그램ID+'"></div></div><div class="chk" id="chk_'+x.프로그램ID+'"></div>';
+  return el;
+}
+function usedCells(){ var u={}; Object.keys(SELECTED).forEach(function(id){ var x=ITEM[id]; if(!x)return; x.요일.forEach(function(d){ u[x.시간대+'|'+d]=x; }); }); return u; }
+function toggle(id){ var x=ITEM[id];
+  if(SELECTED[id]){ delete SELECTED[id]; refresh(); return; }
+  var u=usedCells();
+  for(var i=0;i<x.요일.length;i++){ var k=x.시간대+'|'+x.요일[i]; if(u[k]){ toast(slotShort(x.시간대)+' '+x.요일[i]+'요일은 이미 '+u[k].프로그램명); return; } }
+  SELECTED[id]=x; refresh();
+}
+function refresh(){
+  var u=usedCells();
+  Object.keys(ITEM).forEach(function(id){ var x=ITEM[id],el=document.getElementById('it_'+id); if(!el)return;
+    var selected=!!SELECTED[id],blocked=false,by='';
+    if(!selected){ for(var i=0;i<x.요일.length;i++){ if(u[x.시간대+'|'+x.요일[i]]){blocked=true;by=x.요일[i];break;} } }
+    el.classList.toggle('sel',selected); el.classList.toggle('dis',blocked);
+    document.getElementById('chk_'+id).textContent=selected?'✔':'';
+    document.getElementById('conf_'+id).textContent=blocked?(slotShort(x.시간대)+' '+by+'요일 겹침'):'';
+  });
+  var th='<th class="slot"></th>'+DAYS.map(function(d){return '<th>'+d+'</th>';}).join('');
+  var body=SLOTS.map(function(sl){
+    var tds=DAYS.map(function(d){ var x=u[sl+'|'+d];
+      return x?('<td class="cell full">'+x.프로그램명+(x.장소?'<span class="pl">'+x.장소+'</span>':'')+'</td>'):'<td class="cell">·</td>'; }).join('');
+    return '<tr><td class="slot">'+sl.replace(' (',' <span style="font-weight:400">(')+'</span></td>'+tds+'</tr>';
+  }).join('');
+  document.getElementById('tt').innerHTML='<table><tr>'+th+'</tr>'+body+'</table>';
+}
+function resetSel(){ SELECTED={}; refresh(); }
+function testSubmit(){
+  var reqBlocks=RAW.filter(function(b){return b.기숙사필수;});
+  if(기숙사여부==='기숙사'){ var ok=Object.keys(SELECTED).some(function(id){ return reqBlocks.some(function(b){return b.블록ID===ITEM[id].블록ID;}); });
+    if(!ok){ toast('기숙사생은 8교시 방과후가 필수예요'); return; } }
+  var names=Object.keys(SELECTED).map(function(id){return ITEM[id].프로그램명+'('+ITEM[id].요일.join('·')+')';});
+  alert(names.length?('신청(테스트):\n\n• '+names.join('\n• ')+'\n\n※ 실제로는 저장됩니다.'):'선택한 프로그램이 없습니다.');
+}
+render();
+</script>
+</body>
+</html>
