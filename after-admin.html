@@ -191,12 +191,15 @@ function slotShort(s){ var m=String(s).split(' '); return {name:m[0], time:m.sli
 function printTimetables(){
   if(!DATA||!DATA.students.length){ alert('아직 신청한 학생이 없습니다.'); return; }
   var slots=DATA.slots, days=DATA.days;
+  var reqSet={}; (DATA.reqSlots||[]).forEach(function(s){reqSet[s]=1;});
   var html=DATA.students.map(function(stu){
     var grid={}; stu.cells.forEach(function(c){ (c.요일||[]).forEach(function(d){ grid[c.시간대+'|'+d]={name:c.프로그램명,place:c.장소}; }); });
     var thead='<th></th>'+days.map(function(d){return '<th>'+d+'</th>';}).join('');
     var rows=slots.map(function(sl){ var s=slotShort(sl);
       var tds=days.map(function(d){ var g=grid[sl+'|'+d];
-        return '<td>'+(g?(g.name+(g.place?'<span class="pl">'+g.place+'</span>':'')):'')+'</td>'; }).join('');
+        if(g) return '<td>'+g.name+(g.place?'<span class="pl">'+g.place+'</span>':'')+'</td>';
+        if(stu.기숙사여부==='기숙사' && !reqSet[sl]) return '<td style="color:#555;font-size:10px;">기숙사</td>';
+        return '<td></td>'; }).join('');
       return '<tr><td class="sl">'+s.name+'<span class="pl">'+s.time+'</span></td>'+tds+'</tr>'; }).join('');
     var head=(stu.학년?(stu.학년+'학년 '):'')+(stu.반?(stu.반+'반 '):'');
     return '<div class="tcard"><h3>'+stu.이름+' <span>'+head+'· '+stu.학번+' · '+stu.기숙사여부+'</span></h3>'+
