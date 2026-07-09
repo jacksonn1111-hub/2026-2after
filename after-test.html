@@ -148,7 +148,7 @@ function verify(){
   var sid=document.getElementById('sid').value.trim(),name=document.getElementById('sname').value.trim();
   clearMsg('msg1'); if(!sid||!name){showMsg('msg1','학번과 이름을 모두 입력하세요.');return;}
   var b=document.getElementById('btn1');b.disabled=true;b.textContent='확인 중…';
-  call('verifyStudent',{'학번':sid,'이름':name},function(r){
+  call('verifyStudentTest',{'학번':sid,'이름':name},function(r){
     b.disabled=false;b.textContent='다음 단계 →';
     if(!r.ok){showMsg('msg1',r.msg);return;}
     S.학번=sid;S.이름=name; if(r.already){showAlready(r.prev);return;} setStep(2);
@@ -172,7 +172,7 @@ function goStructure(){
   setStep(3);clearMsg('msg3');SELECTED={};ITEM={};
   document.getElementById('load3').style.display='block';
   document.getElementById('blocks').innerHTML='';document.getElementById('tt').classList.add('hidden');
-  call('getStructure',{'학번':S.학번,'기숙사여부':S.기숙사여부},renderStructure,
+  call('getStructureTest',{'학번':S.학번,'기숙사여부':S.기숙사여부},renderStructure,
     function(){document.getElementById('load3').textContent='불러오기 실패. 이전으로 돌아가 다시 시도하세요.';});
 }
 function renderStructure(r){
@@ -257,9 +257,7 @@ function submitAll(){
 
 /* 대기실 */
 var SRV_OFFSET=0,cdTimer=null;
-function boot(){document.getElementById('bootLoad').style.display='block';
-  document.getElementById('app').classList.add('hidden');document.getElementById('gate').classList.add('hidden');
-  call('getWindowInfo',{},function(info){SRV_OFFSET=info.serverNow-Date.now();applyState(info);},openApp);}
+function boot(){ /* 🧪 테스트: 시간 제한 무시하고 바로 신청 화면 */ openApp(); }
 function applyState(info){document.getElementById('bootLoad').style.display='none';
   if(info.state==='open'){openApp();return;} if(info.state==='before'){renderBefore(info);return;} renderClosed(info);}
 function openApp(){if(cdTimer){clearInterval(cdTimer);cdTimer=null;}
