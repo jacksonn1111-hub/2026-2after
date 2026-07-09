@@ -187,7 +187,7 @@ function clearSchedule(){ if(!confirm('시간 제한을 해제하고 상시 열�
 function cancelS(sid,name){ if(!confirm(name+'('+sid+') 학생의 신청을 전부 취소할까요?'))return; call('cancelStudent',{pin:PIN,'학번':sid},function(){load();}); }
 
 /* 학생 시간표 인쇄 */
-function slotShort(s){ var m=String(s).split(' '); return {name:m[0], time:m.slice(1).join(' ')}; }
+function slotShort(s){ var m=String(s).split(' '); return {name:m[0], time:m.slice(1).join(' ').replace(/[()]/g,'')}; }
 function printTimetables(){
   if(!DATA||!DATA.students.length){ alert('아직 신청한 학생이 없습니다.'); return; }
   var slots=DATA.slots, days=DATA.days;
