@@ -167,7 +167,7 @@ function courseCard(p,idx){
   var cap=(p.정원==='제한없음')?'∞':p.정원;
   var pct=(p.정원==='제한없음')?0:Math.min(100,Math.round(p.신청/Math.max(1,p.정원)*100));
   var sel=(p.정원==='제한없음')?p.신청:Math.min(p.신청,p.정원);
-  var pre=[p.요일,p.장소,p.강사].filter(Boolean).join(' · ');
+  var pre=[p.요일,p.장소,p.강사,(p.대상학과?('🎓 '+p.대상학과):'')].filter(Boolean).join(' · ');
   var el=document.createElement('div');el.className='prog';
   el.innerHTML='<div class="phead" onclick="toggleBody('+idx+')">'+
       '<div><div class="pname">'+p.프로그램명+(p.초과?'<span class="otag">정원초과</span>':'')+'</div>'+
@@ -235,7 +235,7 @@ function exportStudentsXlsx(){
     var grid={}; (s.cells||[]).forEach(function(c){ (c.요일||[]).forEach(function(d){ grid[c.시간대+'|'+d]=c.프로그램명; }); });
     byId[s.학번]={기숙사여부:s.기숙사여부, grid:grid, count:(s.cells||[]).length};
   });
-  var header=['학번','이름','학년','반','기숙사여부','신청여부'];
+  var header=['학번','이름','학년','반','학과','기숙사여부','신청여부'];
   slots.forEach(function(sl){ var nm=slotShort(sl).name;
     if(reqSet[sl]) header.push(nm);
     else days.forEach(function(d){ header.push(nm+'('+d+')'); });
@@ -244,7 +244,7 @@ function exportStudentsXlsx(){
   var aoa=[header];
   (DATA.roster||[]).forEach(function(st){
     var a=byId[st.학번], applied=!!a;
-    var row=[st.학번, st.이름, st.학년, st.반, applied?a.기숙사여부:'', applied?'O':'X'];
+    var row=[st.학번, st.이름, st.학년, st.반, st.학과||'', applied?a.기숙사여부:'', applied?'O':'X'];
     slots.forEach(function(sl){
       if(reqSet[sl]){
         var names={}; if(applied){ Object.keys(a.grid).forEach(function(k){ if(k.split('|')[0]===sl) names[a.grid[k]]=1; }); }
